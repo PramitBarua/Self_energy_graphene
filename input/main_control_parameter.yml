@@ -1,0 +1,6 @@
+Input:
+   system_name: graphene_3X3
+   File_location: C:\Users\PRAMIT\Documents\MEGA\Master_thesis\pramit\python_code\related_to_thesis\block_extract\input\graphene_3_3
+   Num_unit_cell: 4 0, 4 1, 4 2, 4 3, 4 4, 4 5, 4 6, 4 7, 4 8
+   Center_ss: 4
+   Save_file: True
