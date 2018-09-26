@@ -17,6 +17,43 @@ import numpy as np
 import yaml
 
 
+def global_write(location, file_name, **kargs):
+    r''' read me:
+    This is the global function to write data into file
+    ideally this function should handle any sort of data
+    this function can write any type of file (.dat, .out, .xyz)
+
+    Data type can be:
+        1. purely numeric
+        2. purely string
+
+    arguments:
+        location: where data file will be saved (directory address)
+        file_name: name of the file where data will be stored
+        *kargs: it contains 2 types of key
+            num_data: if data is purely numerical (numpy array)
+            message: if data is string (wrapped in a list)
+                message is in append mode which means if the file exists
+                then program will append data instead of over writing.
+
+    note: in any situation if data contains number as well as
+    string then convert data into string and wrapped each line
+    in a list. However, this wrapping should be done outside of
+    this function
+    '''
+    if not os.path.isdir(location):
+        os.makedirs(location)
+
+    if 'num_data' in kargs:
+        np.savetxt(os.path.join(location, file_name),
+                   kargs['num_data'].view(float), delimiter=' ')
+
+    if 'message' in kargs:
+        with open(os.path.join(location, file_name), "a+") as f:
+            for line in kargs['message']:
+                f.write(str(line) + "\n")
+
+
 def ao_file_loader(input_location, file_name):
     r''' read me
     this method takes ao file and return overlap matrix and kohn-sham 
@@ -37,10 +74,15 @@ def ao_file_loader(input_location, file_name):
     file = os.path.join(input_location, file_name)
 
     if not os.path.isfile(file):
-        print('=== Directory path is invalid or ',
-              file_name, ' does not exist in the directory ===')
+        message = (
+            '=== Directory path is invalid or '
+            + file_name
+            + ' does not exist in the directory ===')
+        global_write(input_location, 'output.out', message=[message])
+
     else:
-        print('=== ', file_name, ' is found ===')
+        message = ('=== ' + file_name + ' is found ===')
+        global_write(input_location, 'output.out', message=[message])
 
         overlap_matrix_visited = False
         ks_matrix_visited = False
@@ -114,10 +156,15 @@ def csv_file_loader(location, file_name):
     contant = []
     file = os.path.join(location, file_name)
     if not os.path.isfile(file):
-        print('=== Directory path is invalid or ',
-              file_name, ' does not exist in the directory ===')
+        message = (
+            '=== Directory path is invalid or' 
+            + file_name
+            + ' does not exist in the directory ===')
+        global_write(location, 'output.out', message=[message])
     else:
-        print('=== ', file_name, ' is found ===')
+        message = ('=== ' + file_name + ' is found ===')
+        global_write(location, 'output.out', message=[message])
+
         with open(file, "r+") as file_contant:
             # skip first 2 line of the file
             for i in range(2):
@@ -152,11 +199,16 @@ def xyz_file_loader(location, file_name):
     file = os.path.join(location, file_name)
 
     if not os.path.isfile(file):
-        print('=== Directory path is invalid or ',
-              file_name, ' does not exist in the directory ===')
+        message = (
+            '=== Directory path is invalid or '
+            + file_name
+            + ' does not exist in the directory ===')
+        global_write(location, 'output.out', message=[message])
+
     else:
-        print('=== ', file_name, ' is found ===')
-        print()
+        message = ('=== ' + file_name + ' is found ===')
+        global_write(location, 'output.out', message=[message])
+
         with open(file, "r+") as file_contant:
             n_atoms = int(file_contant.readline())
             title = file_contant.readline()
@@ -169,8 +221,10 @@ def xyz_file_loader(location, file_name):
                     pass
 
         if n_atoms != len(coordinates):
-            print('=== Number of atom in the file does not match',
-                  ' with the number of atom mentioned in the file ===')
+            message = (
+                '=== Number of atom in the file does not match'
+                + ' with the number of atom mentioned in the file ===')
+            global_write(location, 'output.out', message=[message])
             atoms = []
             coordinates = []
 
@@ -182,52 +236,20 @@ def yaml_file_loader(location, file_name):
     '''
     file = os.path.join(location, file_name)
     if not os.path.isfile(file):
-        print('=== Directory path is invalid or ',
-              file_name, ' does not exist in the directory ===')
+        message = (
+            '=== Directory path is invalid or '
+            + file_name
+            + ' does not exist in the directory ===')
+        global_write(location, 'output.out', message=[message])
         return {}
     else:
-        print('=== ', file_name, ' is found ===')
+        message = ('=== ' + file_name + ' is found ===')
+        global_write(location, 'output.out', message=[message])
         if os.path.isfile(file):
             with open(file, "r") as raw_data:
                 data = yaml.load(raw_data)
                 return data['Input']
 
-
-def global_write(location, file_name, **kargs):
-    r''' read me:
-    This is the global function to write data into file
-    ideally this function should handle any sort of data
-    this function can write any type of file (.dat, .out, .xyz)
-
-    Data type can be:
-        1. purely numeric
-        2. purely string
-
-    arguments:
-        location: where data file will be saved (directory address)
-        file_name: name of the file where data will be stored
-        *kargs: it contains 2 types of key
-            num_data: if data is purely numerical (numpy array)
-            message: if data is string (wrapped in a list)
-                message is in append mode which means if the file exists
-                then program will append data instead of over writing.
-
-    note: in any situation if data contains number as well as
-    string then convert data into string and wrapped each line
-    in a list. However, this wrapping should be done outside of
-    this function
-    '''
-    if not os.path.isdir(location):
-        os.makedirs(location)
-
-    if 'num_data' in kargs:
-        np.savetxt(os.path.join(location, file_name),
-                   kargs['num_data'].view(float), delimiter=' ')
-
-    if 'message' in kargs:
-        with open(os.path.join(location, file_name), "a+") as f:
-            for line in kargs['message']:
-                f.write(str(line) + "\n")
 
 
 def display(location, file_name, varX, varY, **kargs):
@@ -258,3 +280,5 @@ def display(location, file_name, varX, varY, **kargs):
 
     plt.grid()
     fig1.savefig(os.path.join(fig_location, file_name))
+    message = ('=== Figure saved ===')
+    global_write(location, 'output.out', message=[message])

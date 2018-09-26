@@ -159,3 +159,20 @@ def matrix_block(num_unit_cell, map_file, dat_file, **kargs):
 #     if len(num_unit_cell) == 1:
 #         extract_value = zero_append(extract_value)
     return extract_value
+
+
+def pz_block(array, **kargs):
+    if 'num_orbital' in kargs:
+        num_orbital = kargs['num_orbital']
+    else:
+        num_orbital = 4
+
+    array_shape = array.shape
+    result_shape = (int(array_shape[0]/num_orbital), int(array_shape[1]/num_orbital))
+    result = np.zeros(result_shape)
+
+    count = 0
+    for idx in range(3, array_shape[0], num_orbital):
+        result[count] = array[idx][num_orbital-1::num_orbital]
+        count += 1
+    return result

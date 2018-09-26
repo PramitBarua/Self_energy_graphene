@@ -22,29 +22,52 @@ def distance(center_ss, coordinate):
 
 
 def alpha_cal(hamiltonian, kx, kz, distance):
-    result = []
-    for itemKx in kx:
-        buffer = []
-        for itemKz in kz:
-            sum_value = 0
-            for idxH in range(len(hamiltonian)):
+    len_kx = len(kx)
+    len_kz = len(kz)
+    H_shape = hamiltonian[0].shape
+
+    result = np.zeros((len_kx, len_kz, H_shape[0], H_shape[1]), dtype=complex)
+
+    for idxKx, itemKx in enumerate(kx):
+        for idxKz, itemKz in enumerate(kz):
+            for idxH, itemH in enumerate(hamiltonian):
                 kr = itemKx*distance[idxH][0] + itemKz*distance[idxH][2]
-                sum_value = sum_value + hamiltonian[idxH]*np.exp(1j*kr)
-            buffer.extend(sum_value)
-        buffer = np.array(buffer)
-        result.extend(np.transpose(buffer))
-    return np.array(result)
+                result[idxKx][idxKz] += itemH*np.exp(1j*kr)
+
+    return result
 
 
 def greens_fun(energy, hamiltonian, overlap):
-    result = []
-    for energy_item in energy:
-        result.append(np.linalg.inv((energy_item*overlap)-hamiltonian))
-    return np.array(result)
+    H_shape = hamiltonian.shape
+    result_shape = energy.shape + (H_shape[2], H_shape[3])
+
+    result = np.zeros(result_shape, dtype=complex)
+
+    for idE, energy_item in enumerate(energy):
+        value_inv = np.zeros(H_shape, dtype=complex)
+        for idxKx in range(H_shape[0]):
+            for idxKz in range(H_shape[1]):
+                value = (energy_item*overlap[idxKx][idxKz]) - hamiltonian[idxKx][idxKz]
+                value_inv[idxKx][idxKz] = np.linalg.inv(value)
+        sum_value = sum_cal(value_inv)
+        result[idE] = sum_value/(H_shape[0]*H_shape[1])
+    return result
+
+
+def sum_cal(array):
+    shape_array = array.shape
+    value = 0
+
+    for idx in range(shape_array[0]):
+        for idy in range(shape_array[1]):
+            value += array[idx][idy]
+
+    return value
 
 
 def trace_cal(array):
-    result = []
+    shape_array = array.shape
+    result = np.zeros(shape_array[0], dtype=complex)
     for idx in range(len(array)):
-        result.append(np.trace(array[idx]))
-    return np.array(result)
+        result[idx] = np.trace(array[idx])
+    return result
